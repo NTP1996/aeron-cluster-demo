@@ -1,5 +1,5 @@
 # aeron-cluster-demo
-这是一个 aeron cluster 的 demo 模版。此项目基于 docker 能够仅使用一个脚本完成启动集群和依赖的服务（nacos）。
+这是一个 aeron cluster 的 demo 模版。此项目使用一个脚本完成项目编译打包部署并基于 docker 启动集群多节点和 nacos 服务。自定义 docker network 完成集群节点通信和 nacos 服务注册；
 
 ![img_1.png](img_1.png)
 ## 快速开始
