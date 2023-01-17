@@ -38,7 +38,7 @@ public class Node {
     NacosService nacosService;
 
     public void init() throws UnknownHostException {
-        final int nodeId = parseInt(System.getProperty("aeron.cluster.tutorial.nodeId", "0"));               // <1>
+        final int nodeId = parseInt(System.getProperty("nodeId", "1024"));               // <1>
         List<Instance> allInstance;
         while (true) {
             allInstance = nacosService.getAllInstance();

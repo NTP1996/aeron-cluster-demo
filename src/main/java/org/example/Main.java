@@ -16,6 +16,8 @@ public class Main {
 
 
     public static void main(String[] args) {
+        int nodeId = parseInt(System.getProperty("nodeId", "110"));               // <1>
+        System.out.println("nodeId:"+nodeId);
         SpringApplication.run(Main.class,args);
     }
 }

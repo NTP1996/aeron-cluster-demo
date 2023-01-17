@@ -40,7 +40,7 @@ public class NacosService {
     }
 
     public Instance getSelf() {
-        final int nodeId = parseInt(System.getProperty("aeron.cluster.tutorial.nodeId"));
+        final int nodeId = parseInt(System.getProperty("nodeId","1024"));
         for (Instance instance : this.getAllInstance()) {
             int id = parseInt(instance.getMetadata().get("nodeId"));
             if (id == nodeId) {
@@ -54,7 +54,7 @@ public class NacosService {
     public NacosDiscoveryProperties nacosDiscoveryProperties() {
         NacosDiscoveryProperties nacosDiscoveryProperties = new NacosDiscoveryProperties();
         Map<String, String> metadata = nacosDiscoveryProperties.getMetadata();
-        metadata.put("nodeId", System.getProperty("aeron.cluster.tutorial.nodeId"));
+        metadata.put("nodeId", System.getProperty("nodeId","1024"));
         return nacosDiscoveryProperties;
     }
 
