@@ -2,7 +2,7 @@
 这是一个 aeron cluster 的 demo，用于初步了解 aeron cluster
 的运行方式。此项目基于 docker 能够仅使用一个脚本完成启动集群和依赖的服务（Nacos）的操作。
 
-
+![img_1.png](img_1.png)
 ## 快速开始
 前置条件
 -[ ] MacOS
@@ -26,7 +26,7 @@ sh quickDocker.sh
 使用docker desktop 查看各应用日志
 ![img.png](img.png)
 # raftlogData
-提交到集群的是一个（Long，String）entry，集群维护一个`Map<Long, String>`
+提交到集群的数据是一个（Long，String）元素，集群维护一个`Map<Long, String>`
 
 ```
 # raftlogData:[key|valueLength|value]
