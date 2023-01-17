@@ -14,12 +14,17 @@ import org.example.aeronCluster.utils.RaftLogEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class ServiceImp implements ClusteredService {
     @Autowired
     ClientAgent client;
+
+
+    Map<Long, String> clusterData = new HashMap<>();
 
     @Override
     public void onStart(Cluster cluster, Image snapshotImage) {
@@ -41,7 +46,8 @@ public class ServiceImp implements ClusteredService {
 
     @Override
     public void onSessionMessage(ClientSession session, long timestamp, DirectBuffer buffer, int offset, int length, Header header) {
-        String msg = RaftLogEncoder.decoder(buffer, offset);
+        String msg = RaftLogEncoder.decoder(buffer, offset, clusterData);
+
         printInfo("[onSessionMessage]", msg);
 
     }
@@ -77,7 +83,7 @@ public class ServiceImp implements ClusteredService {
 
     @Override
     public void onNewLeadershipTermEvent(long leadershipTermId, long logPosition, long timestamp, long termBaseLogPosition, int leaderMemberId, int logSessionId, TimeUnit timeUnit, int appVersion) {
-        printInfo("onNewLeadershipTermEvent","leadershipTermId = " + leadershipTermId + ", logPosition = " + logPosition + ", timestamp = " + timestamp + ", termBaseLogPosition = " + termBaseLogPosition + ", leaderMemberId = " + leaderMemberId + ", logSessionId = " + logSessionId + ", timeUnit = " + timeUnit + ", appVersion = " + appVersion);
+        printInfo("onNewLeadershipTermEvent", "leadershipTermId = " + leadershipTermId + ", logPosition = " + logPosition + ", timestamp = " + timestamp + ", termBaseLogPosition = " + termBaseLogPosition + ", leaderMemberId = " + leaderMemberId + ", logSessionId = " + logSessionId + ", timeUnit = " + timeUnit + ", appVersion = " + appVersion);
     }
 
     @Override
@@ -86,8 +92,11 @@ public class ServiceImp implements ClusteredService {
     }
 
     public void printInfo(String method, String msg) {
-        System.out.println("[" + method + "] "+ msg);
+        System.out.println("[" + method + "] " + msg);
     }
 
+    public Map<Long, String> getClusterData() {
+        return clusterData;
+    }
 
 }

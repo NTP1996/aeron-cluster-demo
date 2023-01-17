@@ -67,7 +67,7 @@ public class ClientAgent implements Agent {
         int length = RaftLogEncoder.encoder(sendBuffer, key, value);
         System.out.println("[ClientAgent] send :[key:" + key + ",value:" + value + "]");
 
-        while (aeronCluster.offer(sendBuffer, 0, length) < 0)    // <2>
+        while (aeronCluster.offer(sendBuffer, 0, length) < 0)
         {
             idleStrategy.idle(aeronCluster.pollEgress());
         }
@@ -91,14 +91,12 @@ public class ClientAgent implements Agent {
             workCount++;
         }
         if (!this.isInit) {
-            // 链接失败报错
             this.aeronCluster = this.init();
             workCount += 1;
         }
         if (aeronCluster.egressSubscription().isConnected()) {
             workCount += this.aeronCluster.pollEgress();
         }
-        //拉取返回值
         return workCount;
     }
 

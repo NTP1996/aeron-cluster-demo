@@ -17,7 +17,7 @@ public class AeronCommon {
     public static final int LOG_CONTROL_PORT_OFFSET = 6;
     public static final int CLIENT_RESPONSE_PORT_OFFSET = 7;
 
-    private static final String CONSENSUS_CHANNAL = "aeron:udp?term-length=128m|alias=consensus";
+    private static final String CONSENSUS_CHANNAL = "aeron:udp";
 
 
 
@@ -96,7 +96,7 @@ public class AeronCommon {
     }
     public static String ingressChannel(String hostname,int offset){
         final int port = calculatePort(0,offset);
-        return new ChannelUriStringBuilder("aeron:udp?term-length=64k")
+        return new ChannelUriStringBuilder("aeron:udp")
                 .endpoint(hostname + ":" + port)
                 .build();
     }
