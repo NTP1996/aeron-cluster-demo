@@ -20,7 +20,7 @@ public class NacosService {
     public List<Instance> getAllInstance() {
         List<Instance> allInstances = Lists.newArrayList();
         try {
-            NamingService nacosNamingService = NamingFactory.createNamingService("172.17.0.2");
+            NamingService nacosNamingService = NamingFactory.createNamingService("nacos");
             allInstances = nacosNamingService.getAllInstances("node");
         } catch (NacosException e) {
             System.out.println("NacosException:" + e);
