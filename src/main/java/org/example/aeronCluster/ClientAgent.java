@@ -1,6 +1,5 @@
 package org.example.aeronCluster;
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
 import io.aeron.cluster.client.AeronCluster;
 import io.aeron.cluster.client.EgressListener;
 import io.aeron.cluster.codecs.EventCode;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.List;
 
 @Component
 public class ClientAgent implements Agent {

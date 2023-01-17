@@ -2,8 +2,6 @@ package org.example.aeronCluster.utils;
 
 import io.aeron.ChannelUriStringBuilder;
 import io.aeron.CommonContext;
-import io.aeron.samples.cluster.tutorial.BasicAuctionClusteredServiceNode;
-import org.agrona.BitUtil;
 import org.agrona.ErrorHandler;
 
 import java.util.List;
