@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: node
+  cloud:
+    nacos:
+      server-addr: 172.17.0.2:8848
+      discovery:
+        username: nacos
+        password: nacos
+        namespace: public
