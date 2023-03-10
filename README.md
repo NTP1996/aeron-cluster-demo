@@ -8,7 +8,7 @@
 -[ ] 安装且配置 [maven](https://maven.apache.org/) 和 [docker Desktop](https://www.docker.com/)
 ```
 # MacOS
-open /Applications/Docker.app
+open /Applications/Docker.app  # run the Docker.app
 git clone https://github.com/NTP1996/aeron-cluster-demo.git
 cd aeron-cluster-demo
 sh quickDocker.sh
