@@ -39,12 +39,16 @@ public class Node {
     @Autowired
     NacosService nacosService;
 
+    static String baseVol = "cluster/";
+
     public void init() throws UnknownHostException {
-        final int nodeId = parseInt(System.getProperty("nodeId", "1024"));               // <1>
+        final int nodeId = parseInt(System.getProperty("nodeId", "1024"));
         List<Instance> allInstance;
         while (true) {
             allInstance = nacosService.getAllInstance();
-            if (allInstance.size() == 3) break;
+            if (allInstance.size() == 3) {
+                break;
+            }
             System.out.println("等待3 个 Node 启动: size:" + allInstance.size());
             try {
                 Thread.sleep(1000);
@@ -56,13 +60,13 @@ public class Node {
         String[] hostnames = nacosService.getHostnames();
         final String hostname = InetAddress.getLocalHost().getHostAddress();
 
-        final File baseDir = new File(System.getProperty("user.dir"), "node" + nodeId);                 // <3>
+        final File baseDir = new File(System.getProperty("user.dir"), baseVol+"node" + nodeId);
         final String aeronDirName = CommonContext.getAeronDirectoryName() + "-" + nodeId + "-driver";
 
         System.out.println("[config] hostname:" + hostname);
         System.out.println("[config] baseDir:" + baseDir);
         System.out.println("[config] aeronDirName:" + aeronDirName);
-        final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();                              // <4>
+        final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         // end::main[]
 
         // tag::media_driver[]
