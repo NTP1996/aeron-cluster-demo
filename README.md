@@ -4,8 +4,8 @@
 ![img_1.png](img_1.png)
 ## 快速开始
 前置条件
--[ ] MacOS
--[ ] 安装且配置 [maven](https://maven.apache.org/) 和 [docker Desktop](https://www.docker.com/)
+- [ ] MacOS
+- [ ] 安装且配置 [maven](https://maven.apache.org/) 和 [docker Desktop](https://www.docker.com/)
 ```
 # MacOS
 open /Applications/Docker.app  # run the Docker.app
