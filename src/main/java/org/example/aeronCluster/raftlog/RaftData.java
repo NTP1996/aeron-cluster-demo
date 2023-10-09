@@ -2,8 +2,10 @@ package org.example.aeronCluster.raftlog;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class RaftData {
+public class RaftData implements Serializable {
     long key;
     String value;
 
@@ -11,4 +13,5 @@ public class RaftData {
         this.key = key;
         this.value = value;
     }
+
 }

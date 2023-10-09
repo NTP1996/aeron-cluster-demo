@@ -4,12 +4,17 @@ import io.aeron.ChannelUriStringBuilder;
 import io.aeron.CommonContext;
 import org.agrona.ErrorHandler;
 
+import java.io.File;
 import java.util.List;
 
 import static io.aeron.samples.cluster.ClusterConfig.*;
 
 public class AeronCommon {
 
+    public static File baseDir;
+    public static String aeronDirName;
+    public static File archiveDir;
+    public static File clusterDir;
     static int TERM_LENGTH = 1024 * 1024;
 
     private static final int PORT_BASE = 9000;
