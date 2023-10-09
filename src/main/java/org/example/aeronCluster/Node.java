@@ -11,6 +11,7 @@ import io.aeron.cluster.service.ClusteredServiceContainer;
 import io.aeron.driver.MediaDriver;
 import io.aeron.driver.MinMulticastFlowControlSupplier;
 import io.aeron.driver.ThreadingMode;
+import lombok.extern.slf4j.Slf4j;
 import org.agrona.concurrent.NoOpLock;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.example.aeronCluster.utils.AeronCommon;
@@ -22,9 +23,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.aeron.samples.cluster.ClusterConfig.*;
@@ -33,9 +32,10 @@ import static org.example.aeronCluster.utils.AeronCommon.LOG_CONTROL_PORT_OFFSET
 import static org.example.aeronCluster.utils.AeronCommon.udpChannel;
 
 @Component
+@Slf4j
 public class Node {
     @Autowired
-    ServiceImp serviceImp;
+    ClusterService clusterService;
     @Autowired
     NacosService nacosService;
 
@@ -79,7 +79,6 @@ public class Node {
                 .errorHandler(AeronCommon.errorHandler("Media Driver"));
         // end::media_driver[]
 
-        // todo 这里为什么有两个archive client contest
         final AeronArchive.Context replicationArchiveContext = new AeronArchive.Context()
                 .controlResponseChannel("aeron:udp?endpoint=" + hostname + ":0");
 
@@ -123,17 +122,17 @@ public class Node {
         // tag::clustered_service[]
         final ClusteredServiceContainer.Context clusteredServiceContext =
                 new ClusteredServiceContainer.Context()
-                        .aeronDirectoryName(aeronDirName)                                                            // <1>
-                        .archiveContext(aeronArchiveContext.clone())                                                 // <2>
+                        .aeronDirectoryName(aeronDirName)
+                        .archiveContext(aeronArchiveContext.clone())
                         .clusterDir(new File(baseDir, "cluster"))
-                        .clusteredService(serviceImp)                                        // <3>
+                        .clusteredService(clusterService)
                         .errorHandler(AeronCommon.errorHandler("Clustered ServiceImp"));
         // end::clustered_service[]
 //
         // tag::running[]
 
         ClusteredMediaDriver clusteredMediaDriver = ClusteredMediaDriver.launch(
-                mediaDriverContext, archiveContext, consensusModuleContext);                             // <1>
+                mediaDriverContext, archiveContext, consensusModuleContext);
         ClusteredServiceContainer container = ClusteredServiceContainer.launch(
                 clusteredServiceContext);
         // end::running[]

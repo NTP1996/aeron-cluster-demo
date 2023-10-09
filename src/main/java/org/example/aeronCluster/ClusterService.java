@@ -7,24 +7,29 @@ import io.aeron.cluster.service.ClientSession;
 import io.aeron.cluster.service.Cluster;
 import io.aeron.cluster.service.ClusteredService;
 import io.aeron.logbuffer.Header;
+import lombok.extern.slf4j.Slf4j;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.AgentRunner;
 import org.agrona.concurrent.SleepingIdleStrategy;
-import org.example.aeronCluster.utils.RaftLogEncoder;
+import org.example.aeronCluster.raftlog.RaftData;
+import org.example.aeronCluster.raftlog.RaftDataEngcoderAndDecoder;
+import org.example.nacos.NacosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class ServiceImp implements ClusteredService {
+@Slf4j
+public class ClusterService implements ClusteredService {
     @Autowired
-    ClientAgent client;
+    ClusterClient client;
+    @Autowired
+    NacosService nacosService;
 
-
-    Map<Long, String> clusterData = new HashMap<>();
+    List<RaftData> clusterRaftData = new ArrayList<>();
 
     @Override
     public void onStart(Cluster cluster, Image snapshotImage) {
@@ -46,10 +51,9 @@ public class ServiceImp implements ClusteredService {
 
     @Override
     public void onSessionMessage(ClientSession session, long timestamp, DirectBuffer buffer, int offset, int length, Header header) {
-        String msg = RaftLogEncoder.decoder(buffer, offset, clusterData);
-
-        printInfo("[onSessionMessage]", msg);
-
+        RaftData decoder = RaftDataEngcoderAndDecoder.decoder(buffer, offset, clusterRaftData);
+        nacosService.update(clusterRaftData.size());
+        printInfo("[onSessionMessage]", "[key:" + decoder.getKey() + ", valueLength:" + decoder.getValue().length() + ", value:" + decoder.getValue() + "]");
     }
 
     @Override
@@ -68,10 +72,11 @@ public class ServiceImp implements ClusteredService {
     public void onRoleChange(Cluster.Role newRole) {
         printInfo("onRoleChange:", newRole.toString());
         AgentRunner agentRunner = new AgentRunner(new SleepingIdleStrategy(), (throwable -> {
-            System.out.println(throwable.toString());
+            log.info(throwable.toString());
             throwable.printStackTrace();
         }), null, client);
         AgentRunner.startOnThread(agentRunner);
+        nacosService.updateRole(true);
     }
 
     @Override
@@ -92,11 +97,11 @@ public class ServiceImp implements ClusteredService {
     }
 
     public void printInfo(String method, String msg) {
-        System.out.println("[" + method + "] " + msg);
+        log.info("[" + method + "] " + msg);
     }
 
-    public Map<Long, String> getClusterData() {
-        return clusterData;
+    public List<RaftData> getClusterData() {
+        return clusterRaftData;
     }
 
 }
