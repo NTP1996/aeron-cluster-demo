@@ -9,17 +9,23 @@ import io.aeron.cluster.service.ClusteredService;
 import io.aeron.logbuffer.Header;
 import lombok.extern.slf4j.Slf4j;
 import org.agrona.DirectBuffer;
+import org.agrona.ExpandableArrayBuffer;
 import org.agrona.concurrent.AgentRunner;
+import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.SleepingIdleStrategy;
 import org.example.aeronCluster.raftlog.RaftData;
 import org.example.aeronCluster.raftlog.RaftDataEngcoderAndDecoder;
+import org.example.aeronCluster.snapshot.Deserializer;
+import org.example.aeronCluster.snapshot.Serializer;
 import org.example.nacos.NacosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
@@ -30,6 +36,7 @@ public class ClusterService implements ClusteredService {
     NacosService nacosService;
 
     List<RaftData> clusterRaftData = new ArrayList<>();
+    private final IdleStrategy idleStrategy = new SleepingIdleStrategy();
 
     @Override
     public void onStart(Cluster cluster, Image snapshotImage) {
@@ -37,6 +44,24 @@ public class ClusterService implements ClusteredService {
         if (snapshotImage != null) {
             printInfo("onStart-snapshot", "");
         }
+        ExpandableArrayBuffer snapshotBuffer = new ExpandableArrayBuffer();
+        AtomicInteger snapshotBufferOffset = new AtomicInteger(0);
+        if (snapshotImage != null && !snapshotImage.isEndOfStream()) {
+            snapshotImage.poll((buffer, offset, length, header) -> {
+                if (length > 0) {
+                    buffer.getBytes(offset, snapshotBuffer, snapshotBufferOffset.get(), length);
+                    snapshotBufferOffset.getAndAdd(length);
+                }
+            }, Integer.MAX_VALUE);
+            byte[] bytes = new byte[snapshotBufferOffset.get()];
+            snapshotBuffer.getBytes(0, bytes);
+            this.clusterRaftData = Deserializer.deserializeFromBytes(bytes);
+        }
+    }
+
+    public static void main(String[] args) {
+        ExpandableArrayBuffer snapshotBuffer = new ExpandableArrayBuffer();
+        System.out.println(Arrays.toString(snapshotBuffer.byteArray()));
     }
 
     @Override
@@ -64,7 +89,15 @@ public class ClusterService implements ClusteredService {
 
     @Override
     public void onTakeSnapshot(ExclusivePublication snapshotPublication) {
-        printInfo("onTakeSnapshot", "");
+        printInfo("onTakeSnapshot", "start take snapshot");
+        byte[] bytes = Serializer.serializeToBytes(clusterRaftData);
+        ExpandableArrayBuffer buffer = new ExpandableArrayBuffer();
+        buffer.putBytes(0, bytes);
+
+        while (snapshotPublication.offer(buffer, 0, bytes.length) < 0) {
+            idleStrategy.idle();
+        }
+        printInfo("onTakeSnapshot", "end take snapshot" + " size:" + clusterRaftData.size());
 
     }
 

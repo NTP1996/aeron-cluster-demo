@@ -60,18 +60,20 @@ public class Node {
         String[] hostnames = nacosService.getHostnames();
         final String hostname = InetAddress.getLocalHost().getHostAddress();
 
-        final File baseDir = new File(System.getProperty("user.dir"), baseVol+"node" + nodeId);
-        final String aeronDirName = CommonContext.getAeronDirectoryName() + "-" + nodeId + "-driver";
+        AeronCommon.baseDir = new File(System.getProperty("user.dir"), baseVol+"node" + nodeId);
+        AeronCommon.aeronDirName = CommonContext.getAeronDirectoryName() + "-" + nodeId + "-driver";
+        AeronCommon.archiveDir = new File(AeronCommon.baseDir, "archive");
+        AeronCommon.clusterDir = new File(AeronCommon.baseDir, "cluster");
 
         System.out.println("[config] hostname:" + hostname);
-        System.out.println("[config] baseDir:" + baseDir);
-        System.out.println("[config] aeronDirName:" + aeronDirName);
+        System.out.println("[config] baseDir:" + AeronCommon.baseDir);
+        System.out.println("[config] aeronDirName:" + AeronCommon.aeronDirName);
         final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         // end::main[]
 
         // tag::media_driver[]
         final MediaDriver.Context mediaDriverContext = new MediaDriver.Context()
-                .aeronDirectoryName(aeronDirName)
+                .aeronDirectoryName(AeronCommon.aeronDirName)
                 .threadingMode(ThreadingMode.SHARED)
                 .termBufferSparseFile(true)
                 .multicastFlowControlSupplier(new MinMulticastFlowControlSupplier())
@@ -84,9 +86,9 @@ public class Node {
 
         // tag::archive[]
         final Archive.Context archiveContext = new Archive.Context()
-                .aeronDirectoryName(aeronDirName)
+                .aeronDirectoryName(AeronCommon.aeronDirName)
                 .segmentFileLength(1024 * 1024)
-                .archiveDir(new File(baseDir, "archive"))
+                .archiveDir(AeronCommon.archiveDir)
                 .controlChannel(udpChannel(nodeId, hostname, ARCHIVE_CONTROL_PORT_OFFSET))
                 .localControlChannel("aeron:ipc?term-length=64k")
                 .archiveClientContext(replicationArchiveContext)
@@ -101,7 +103,7 @@ public class Node {
                 .lock(NoOpLock.INSTANCE)
                 .controlRequestChannel(archiveContext.localControlChannel())
                 .controlResponseChannel(archiveContext.localControlChannel())
-                .aeronDirectoryName(aeronDirName);
+                .aeronDirectoryName(AeronCommon.aeronDirName);
         // end::archive_client[]
 //
         System.out.println("[config]clusterMembers: " + AeronCommon.clusterMembers(Arrays.asList(hostnames)));
@@ -110,7 +112,7 @@ public class Node {
                 .errorHandler(AeronCommon.errorHandler("Consensus Module"))
                 .clusterMemberId(nodeId)
                 .clusterMembers(AeronCommon.clusterMembers(Arrays.asList(hostnames)))
-                .clusterDir(new File(baseDir, "cluster"))
+                .clusterDir(AeronCommon.clusterDir)
                 .replicationChannel(AeronCommon.logReplicationChannel(hostname))
                 .logChannel(AeronCommon.logControlChannel(nodeId, hostname, LOG_CONTROL_PORT_OFFSET))
                 .consensusChannel(AeronCommon.consensusChannal(hostname, MEMBER_FACING_PORT_OFFSET))
@@ -122,9 +124,9 @@ public class Node {
         // tag::clustered_service[]
         final ClusteredServiceContainer.Context clusteredServiceContext =
                 new ClusteredServiceContainer.Context()
-                        .aeronDirectoryName(aeronDirName)
+                        .aeronDirectoryName(AeronCommon.aeronDirName)
                         .archiveContext(aeronArchiveContext.clone())
-                        .clusterDir(new File(baseDir, "cluster"))
+                        .clusterDir(AeronCommon.clusterDir)
                         .clusteredService(clusterService)
                         .errorHandler(AeronCommon.errorHandler("Clustered ServiceImp"));
         // end::clustered_service[]

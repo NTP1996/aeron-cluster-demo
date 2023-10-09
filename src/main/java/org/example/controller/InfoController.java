@@ -1,8 +1,10 @@
 package org.example.controller;
 
+import com.sun.net.httpserver.Authenticator;
 import org.example.aeronCluster.ClusterClient;
 import org.example.aeronCluster.raftlog.RaftData;
 import org.example.aeronCluster.ClusterService;
+import org.example.aeronCluster.snapshot.SnapshotTrigger;
 import org.example.nacos.NacosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,6 +25,8 @@ public class InfoController {
     @Autowired
     ClusterService clusterService;
 
+    @Autowired
+    SnapshotTrigger snapshotTrigger;
     @Autowired
     ClusterClient client;
     @GetMapping("/")
@@ -60,5 +64,16 @@ public class InfoController {
             sb.append("[").append(i).append("] ").append(raftData).append("\n");
         }
         return "节点数据:\n"+sb.toString();
+    }
+
+    @GetMapping("/takeSnapshot")
+    public String TakeSnapshot(){
+        String snapshotResult;
+        if(snapshotTrigger.trigger()){
+            snapshotResult = "Success";
+        }else{
+            snapshotResult = "Fail";
+        }
+        return snapshotResult;
     }
 }

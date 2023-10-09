@@ -89,7 +89,6 @@ public class ClusterClient implements Agent {
         if (this.isInit && keepAliveDeadlineMs < currentTime) {
             aeronCluster.sendKeepAlive();
             keepAliveDeadlineMs = System.currentTimeMillis() + keepAliveInterval;
-//            log.info("[ClientAgent] Send Alive keepAliveDeadlineMs:"+keepAliveDeadlineMs);
             workCount++;
         }
         if (!this.isInit) {
