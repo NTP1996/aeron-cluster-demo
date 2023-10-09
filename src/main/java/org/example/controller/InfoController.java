@@ -1,8 +1,8 @@
 package org.example.controller;
 
-import org.example.aeronCluster.ClientAgent;
-import org.example.aeronCluster.Node;
-import org.example.aeronCluster.ServiceImp;
+import org.example.aeronCluster.ClusterClient;
+import org.example.aeronCluster.raftlog.RaftData;
+import org.example.aeronCluster.ClusterService;
 import org.example.nacos.NacosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Map;
+import java.util.List;
 
 import static java.lang.Integer.parseInt;
 
@@ -21,10 +21,10 @@ public class InfoController {
     NacosService nacosService;
 
     @Autowired
-    ServiceImp serviceImp;
+    ClusterService clusterService;
 
     @Autowired
-    ClientAgent client;
+    ClusterClient client;
     @GetMapping("/")
     public String index() {
         final int nodeId = parseInt(System.getProperty("nodeId","1024"));
@@ -53,11 +53,12 @@ public class InfoController {
     }
     @GetMapping("/nodeData")
     public String nodeData(){
-        Map<Long, String> clusterData = serviceImp.getClusterData();
+        List<RaftData> clusterData = clusterService.getClusterData();
         StringBuffer sb = new StringBuffer();
-        clusterData.forEach((k,v)->{
-            sb.append("["+k+","+v+"]\n");
-        });
-        return "节点数据:"+sb.toString();
+        for (int i = 0; i < clusterData.size(); i++) {
+            RaftData raftData = clusterData.get(i);
+            sb.append("[").append(i).append("] ").append(raftData).append("\n");
+        }
+        return "节点数据:\n"+sb.toString();
     }
 }

@@ -11,6 +11,7 @@ import io.aeron.cluster.service.ClusteredServiceContainer;
 import io.aeron.driver.MediaDriver;
 import io.aeron.driver.MinMulticastFlowControlSupplier;
 import io.aeron.driver.ThreadingMode;
+import lombok.extern.slf4j.Slf4j;
 import org.agrona.concurrent.NoOpLock;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.example.aeronCluster.utils.AeronCommon;
@@ -22,9 +23,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.aeron.samples.cluster.ClusterConfig.*;
@@ -33,18 +32,23 @@ import static org.example.aeronCluster.utils.AeronCommon.LOG_CONTROL_PORT_OFFSET
 import static org.example.aeronCluster.utils.AeronCommon.udpChannel;
 
 @Component
+@Slf4j
 public class Node {
     @Autowired
-    ServiceImp serviceImp;
+    ClusterService clusterService;
     @Autowired
     NacosService nacosService;
 
+    static String baseVol = "cluster/";
+
     public void init() throws UnknownHostException {
-        final int nodeId = parseInt(System.getProperty("nodeId", "1024"));               // <1>
+        final int nodeId = parseInt(System.getProperty("nodeId", "1024"));
         List<Instance> allInstance;
         while (true) {
             allInstance = nacosService.getAllInstance();
-            if (allInstance.size() == 3) break;
+            if (allInstance.size() == 3) {
+                break;
+            }
             System.out.println("等待3 个 Node 启动: size:" + allInstance.size());
             try {
                 Thread.sleep(1000);
@@ -56,13 +60,13 @@ public class Node {
         String[] hostnames = nacosService.getHostnames();
         final String hostname = InetAddress.getLocalHost().getHostAddress();
 
-        final File baseDir = new File(System.getProperty("user.dir"), "node" + nodeId);                 // <3>
+        final File baseDir = new File(System.getProperty("user.dir"), baseVol+"node" + nodeId);
         final String aeronDirName = CommonContext.getAeronDirectoryName() + "-" + nodeId + "-driver";
 
         System.out.println("[config] hostname:" + hostname);
         System.out.println("[config] baseDir:" + baseDir);
         System.out.println("[config] aeronDirName:" + aeronDirName);
-        final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();                              // <4>
+        final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         // end::main[]
 
         // tag::media_driver[]
@@ -75,7 +79,6 @@ public class Node {
                 .errorHandler(AeronCommon.errorHandler("Media Driver"));
         // end::media_driver[]
 
-        // todo 这里为什么有两个archive client contest
         final AeronArchive.Context replicationArchiveContext = new AeronArchive.Context()
                 .controlResponseChannel("aeron:udp?endpoint=" + hostname + ":0");
 
@@ -119,17 +122,17 @@ public class Node {
         // tag::clustered_service[]
         final ClusteredServiceContainer.Context clusteredServiceContext =
                 new ClusteredServiceContainer.Context()
-                        .aeronDirectoryName(aeronDirName)                                                            // <1>
-                        .archiveContext(aeronArchiveContext.clone())                                                 // <2>
+                        .aeronDirectoryName(aeronDirName)
+                        .archiveContext(aeronArchiveContext.clone())
                         .clusterDir(new File(baseDir, "cluster"))
-                        .clusteredService(serviceImp)                                        // <3>
+                        .clusteredService(clusterService)
                         .errorHandler(AeronCommon.errorHandler("Clustered ServiceImp"));
         // end::clustered_service[]
 //
         // tag::running[]
 
         ClusteredMediaDriver clusteredMediaDriver = ClusteredMediaDriver.launch(
-                mediaDriverContext, archiveContext, consensusModuleContext);                             // <1>
+                mediaDriverContext, archiveContext, consensusModuleContext);
         ClusteredServiceContainer container = ClusteredServiceContainer.launch(
                 clusteredServiceContext);
         // end::running[]

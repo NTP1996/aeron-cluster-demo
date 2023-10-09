@@ -6,12 +6,13 @@ import io.aeron.cluster.codecs.EventCode;
 import io.aeron.driver.MediaDriver;
 import io.aeron.driver.ThreadingMode;
 import io.aeron.logbuffer.Header;
+import lombok.extern.slf4j.Slf4j;
 import org.agrona.*;
 import org.agrona.concurrent.Agent;
 import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.SleepingIdleStrategy;
 import org.example.aeronCluster.utils.AeronCommon;
-import org.example.aeronCluster.utils.RaftLogEncoder;
+import org.example.aeronCluster.raftlog.RaftDataEngcoderAndDecoder;
 import org.example.nacos.NacosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,8 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 
 @Component
-public class ClientAgent implements Agent {
+@Slf4j
+public class ClusterClient implements Agent {
     @Autowired
     NacosService nacosService;
 
@@ -37,13 +39,13 @@ public class ClientAgent implements Agent {
     final static long keepAliveInterval = 3000;
 
     public AeronCluster init() throws UnknownHostException {
-        System.out.println("初始化 client");
+        log.info("初始化 client");
 
         // get 3 Node ip
         String[] hostnames = nacosService.getHostnames();
         final String hostname = InetAddress.getLocalHost().getHostAddress();
         final String ingressEndpoints = AeronCommon.ingressEndpoints(Arrays.asList(hostnames));
-        System.out.println("[ClientConfig] ingressEndpoints:" + ingressEndpoints);
+        log.info("[ClientConfig] ingressEndpoints:" + ingressEndpoints);
 
         // tag::connect[]
         MediaDriver mediaDriver = MediaDriver.launchEmbedded(new MediaDriver.Context()
@@ -59,13 +61,13 @@ public class ClientAgent implements Agent {
                         .egressChannel(AeronCommon.udpChannel(0, hostname, AeronCommon.CLIENT_RESPONSE_PORT_OFFSET))                                                // <3>
                         .ingressEndpoints(ingressEndpoints));
         isInit = true;
-        System.out.println("[Client] Client init success");
+        log.info("[Client] Client init success");
         return aeronCluster;
     }
 
     public boolean send(Long key, String value) {
-        int length = RaftLogEncoder.encoder(sendBuffer, key, value);
-        System.out.println("[ClientAgent] send :[key:" + key + ",value:" + value + "]");
+        int length = RaftDataEngcoderAndDecoder.encoder(sendBuffer, key, value);
+        log.info("[ClientAgent] send :[key:" + key + ",value:" + value + "]");
 
         while (aeronCluster.offer(sendBuffer, 0, length) < 0)
         {
@@ -77,7 +79,7 @@ public class ClientAgent implements Agent {
     @Override
     public void onStart() {
         keepAliveDeadlineMs = System.currentTimeMillis() + keepAliveInterval;
-        System.out.println("[ClientAgent] onStart keepAliveDeadlineMs: " + keepAliveDeadlineMs);
+        log.info("[ClientAgent] onStart keepAliveDeadlineMs: " + keepAliveDeadlineMs);
     }
 
     @Override
@@ -87,7 +89,7 @@ public class ClientAgent implements Agent {
         if (this.isInit && keepAliveDeadlineMs < currentTime) {
             aeronCluster.sendKeepAlive();
             keepAliveDeadlineMs = System.currentTimeMillis() + keepAliveInterval;
-//            System.out.println("[ClientAgent] Send Alive keepAliveDeadlineMs:"+keepAliveDeadlineMs);
+//            log.info("[ClientAgent] Send Alive keepAliveDeadlineMs:"+keepAliveDeadlineMs);
             workCount++;
         }
         if (!this.isInit) {
@@ -119,18 +121,18 @@ public class ClientAgent implements Agent {
 
         @Override
         public void onSessionEvent(long correlationId, long clusterSessionId, long leadershipTermId, int leaderMemberId, EventCode code, String detail) {
-            System.out.println("[onSessionEvent] correlationId = " + correlationId + ", clusterSessionId = " + clusterSessionId + ", leadershipTermId = " + leadershipTermId + ", leaderMemberId = " + leaderMemberId + ", code = " + code + ", detail = " + detail);
+            log.info("[onSessionEvent] correlationId = " + correlationId + ", clusterSessionId = " + clusterSessionId + ", leadershipTermId = " + leadershipTermId + ", leaderMemberId = " + leaderMemberId + ", code = " + code + ", detail = " + detail);
 
         }
 
         @Override
         public void onNewLeader(long clusterSessionId, long leadershipTermId, int leaderMemberId, String ingressEndpoints) {
-            System.out.println("[onNewLeader] clusterSessionId = " + clusterSessionId + ", leadershipTermId = " + leadershipTermId + ", leaderMemberId = " + leaderMemberId + ", ingressEndpoints = " + ingressEndpoints);
+            log.info("[onNewLeader] clusterSessionId = " + clusterSessionId + ", leadershipTermId = " + leadershipTermId + ", leaderMemberId = " + leaderMemberId + ", ingressEndpoints = " + ingressEndpoints);
         }
 
         @Override
         public void onMessage(long clusterSessionId, long timestamp, DirectBuffer buffer, int offset, int length, Header header) {
-            System.out.println("[onMessage] clusterSessionId = " + clusterSessionId + ", timestamp = " + timestamp + ", buffer = " + buffer + ", offset = " + offset + ", length = " + length + ", header = " + header);
+            log.info("[onMessage] clusterSessionId = " + clusterSessionId + ", timestamp = " + timestamp + ", buffer = " + buffer + ", offset = " + offset + ", length = " + length + ", header = " + header);
         }
     }
 
