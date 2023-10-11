@@ -35,10 +35,11 @@ public class InfoController {
         System.out.println("NodeId:"+nodeId);
         String info;
         if (!client.isInit()){
-            info = "此节点是 follower 节点。\n /nodeData 获取节点数据。";
+            info = "此节点是 follower 节点。<br /> /nodeData 获取节点数据。";
         }else{
-            info = "此节点是 leader 节点。\n /nodeData 获取节点数据。\n/put 向aeron cluster 发送数据。例如：.../put?key=123&value=123String";
+            info = "此节点是 leader 节点。<br /> /nodeData 获取节点数据。<br />/put 向aeron cluster 发送数据。例如：.../put?key=123&value=123String<br />";
         }
+        info += "/takeSnapshot 开始集群打快照";
         return "this is node:"+nodeId+", "+info;
     }
 
@@ -61,9 +62,9 @@ public class InfoController {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < clusterData.size(); i++) {
             RaftData raftData = clusterData.get(i);
-            sb.append("[").append(i).append("] ").append(raftData).append("\n");
+            sb.append("[").append(i).append("] ").append(raftData).append("<br />");
         }
-        return "节点数据:\n"+sb.toString();
+        return "节点数据:<br />"+sb.toString();
     }
 
     @GetMapping("/takeSnapshot")
