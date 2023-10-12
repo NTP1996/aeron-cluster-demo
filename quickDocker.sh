@@ -10,6 +10,7 @@ docker rm node0 node1 node2 nacos
 # run nacos server
 docker run -d -p 8848:8848 --restart always -e MODE=standalone --name nacos --net staticnet --ip 172.18.0.12 centralx/nacos-server:2.0.4
 
+# package project
 mvn clean compile package
 
 ##clean docker image

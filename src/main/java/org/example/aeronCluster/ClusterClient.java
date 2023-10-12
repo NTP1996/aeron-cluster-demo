@@ -7,12 +7,13 @@ import io.aeron.driver.MediaDriver;
 import io.aeron.driver.ThreadingMode;
 import io.aeron.logbuffer.Header;
 import lombok.extern.slf4j.Slf4j;
-import org.agrona.*;
+import org.agrona.DirectBuffer;
+import org.agrona.ExpandableDirectByteBuffer;
 import org.agrona.concurrent.Agent;
 import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.SleepingIdleStrategy;
-import org.example.aeronCluster.utils.AeronCommon;
 import org.example.aeronCluster.raftlog.RaftDataEngcoderAndDecoder;
+import org.example.aeronCluster.utils.AeronCommon;
 import org.example.nacos.NacosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,25 +25,21 @@ import java.util.Arrays;
 @Component
 @Slf4j
 public class ClusterClient implements Agent {
-    @Autowired
-    NacosService nacosService;
-
-    AeronCluster aeronCluster;
-
-    private final ExpandableDirectByteBuffer sendBuffer = new ExpandableDirectByteBuffer();
-
-    private final IdleStrategy idleStrategy = new SleepingIdleStrategy();
-    private boolean isInit = false;
-    long keepAliveDeadlineMs = 0;
-
     // 3s 发送一次心跳
     final static long keepAliveInterval = 3000;
+    private final ExpandableDirectByteBuffer sendBuffer = new ExpandableDirectByteBuffer();
+    private final IdleStrategy idleStrategy = new SleepingIdleStrategy();
+    @Autowired
+    NacosService nacosService;
+    AeronCluster aeronCluster;
+    long keepAliveDeadlineMs = 0;
+    private boolean isInit = false;
 
     public AeronCluster init() throws UnknownHostException {
         log.info("初始化 client");
 
         // get 3 Node ip
-        String[] hostnames = nacosService.getHostnames();
+        String[] hostnames = {"127.0.0.1"};
         final String hostname = InetAddress.getLocalHost().getHostAddress();
         final String ingressEndpoints = AeronCommon.ingressEndpoints(Arrays.asList(hostnames));
         log.info("[ClientConfig] ingressEndpoints:" + ingressEndpoints);
@@ -58,7 +55,7 @@ public class ClusterClient implements Agent {
                         .egressListener(new Client())
                         .aeronDirectoryName(mediaDriver.aeronDirectoryName())
                         .ingressChannel("aeron:udp")
-                        .egressChannel(AeronCommon.udpChannel(0, hostname, AeronCommon.CLIENT_RESPONSE_PORT_OFFSET))                                                // <3>
+                        .egressChannel(AeronCommon.udpChannel(0, hostname, AeronCommon.CLIENT_RESPONSE_PORT_OFFSET))
                         .ingressEndpoints(ingressEndpoints));
         isInit = true;
         log.info("[Client] Client init success");
@@ -69,8 +66,7 @@ public class ClusterClient implements Agent {
         int length = RaftDataEngcoderAndDecoder.encoder(sendBuffer, key, value);
         log.info("[ClientAgent] send :[key:" + key + ",value:" + value + "]");
 
-        while (aeronCluster.offer(sendBuffer, 0, length) < 0)
-        {
+        while (aeronCluster.offer(sendBuffer, 0, length) < 0) {
             idleStrategy.idle(aeronCluster.pollEgress());
         }
         return true;

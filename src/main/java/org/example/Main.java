@@ -14,9 +14,8 @@ import static java.lang.Integer.parseInt;
 @EnableFeignClients
 public class Main {
     public static void main(String[] args) {
-        // ！！！  使用 quickDocker.sh 启动应用
-        int nodeId = parseInt(System.getProperty("nodeId", "110"));               // <1>
-        System.out.println("nodeId:"+nodeId);
+
+        System.setProperty("aeron.debug.timeout","3600S");
         SpringApplication.run(Main.class,args);
     }
 }
