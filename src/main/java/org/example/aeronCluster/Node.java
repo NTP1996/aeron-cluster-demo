@@ -45,7 +45,7 @@ public class Node {
             if (allInstance.size() == 1) {
                 break;
             }
-            System.out.println("等待3 个 Node 启动: size:" + allInstance.size());
+            System.out.println("等待 Node 启动: size:" + allInstance.size());
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -62,12 +62,13 @@ public class Node {
         final File archiveDir = new File(baseDir, "archive");
 
         final File clusterDir = new File(baseDir, "cluster");
-
+        AeronCommon.clusterDir = clusterDir;
         System.out.println("[config] hostname:" + hostname);
         System.out.println("[config] baseDir:" + baseDir);
         System.out.println("[config] aeronDirName:" + aeronDirName);
         System.out.println("[config] archiveDir:" + archiveDir.getAbsolutePath());
         System.out.println("[config] clusterDir:" + clusterDir.getAbsolutePath());
+
         final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         // end::main[]
 

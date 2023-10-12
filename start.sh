@@ -1,7 +1,10 @@
 #!/bin/bash
+nodeId=0
 echo "nodeid = $nodeId"
 hostname -I
-java -jar -DnodeId=${nodeId}  node.jar
+mvn package
+cd target
+java -jar -DnodeId=${nodeId}  Node-1.0-SNAPSHOT.jar
 
-#-Daeron.event.cluster.log=all \
+
 
