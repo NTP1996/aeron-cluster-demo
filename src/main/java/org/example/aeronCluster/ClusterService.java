@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,13 +29,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 @Slf4j
 public class ClusterService implements ClusteredService {
+    private final IdleStrategy idleStrategy = new SleepingIdleStrategy();
     @Autowired
     ClusterClient client;
     @Autowired
     NacosService nacosService;
-
     List<RaftData> clusterRaftData = new ArrayList<>();
-    private final IdleStrategy idleStrategy = new SleepingIdleStrategy();
 
     @Override
     public void onStart(Cluster cluster, Image snapshotImage) {
@@ -57,11 +55,6 @@ public class ClusterService implements ClusteredService {
             snapshotBuffer.getBytes(0, bytes);
             this.clusterRaftData = Deserializer.deserializeFromBytes(bytes);
         }
-    }
-
-    public static void main(String[] args) {
-        ExpandableArrayBuffer snapshotBuffer = new ExpandableArrayBuffer();
-        System.out.println(Arrays.toString(snapshotBuffer.byteArray()));
     }
 
     @Override
