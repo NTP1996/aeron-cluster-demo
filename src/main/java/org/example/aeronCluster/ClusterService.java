@@ -59,11 +59,6 @@ public class ClusterService implements ClusteredService {
         }
     }
 
-    public static void main(String[] args) {
-        ExpandableArrayBuffer snapshotBuffer = new ExpandableArrayBuffer();
-        System.out.println(Arrays.toString(snapshotBuffer.byteArray()));
-    }
-
     @Override
     public void onSessionOpen(ClientSession session, long timestamp) {
         printInfo("onSessionOpen", session.toString());
