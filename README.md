@@ -38,5 +38,5 @@ public static int encoder(MutableDirectBuffer buffer, Long key, String value) {
     }
 ```
 # todo
-- 2.0 raftlog 跨容器生命周期持久化 + snapshot
+- 2.0 raftlog 跨容器生命周期持久化 + snapshot (done)
 - 3.0 raftlog 消费应用
